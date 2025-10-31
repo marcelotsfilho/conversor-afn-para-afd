@@ -8,106 +8,137 @@ def obter_definicao_afn_usuario():
     Função para coletar os dados do AFN do usuário e retornar um objeto AFN.
     """
     print("--- Definição do AFN ---")
-    # Nota: Usamos aspas simples ' ' para o EPSILON, o que ajuda na digitação se o EPSILON for uma string vazia ("")
-    # Se EPSILON for "", a mensagem será: (Use '' para transições épsilon/vazias)
-    print(f"(Use '{EPSILON}' para transicoes epsilon)")
+    # aviso para informar ao usuario que como deve ser preenchido a transicao epsilon
+    print(f"(Atencao, use '{EPSILON}' para transicoes epsilon)")
     
-    # 1. COLETAR Estados (Q)
-    estados = input("Estados (separados por espaço): ").strip().split()
+    # a seguir consta a coleta de dados do AFN 
+    estados = input("Digite os estados do automato (separados por espaço): ").strip().split()
+    alfabeto = input("Digite o alfabeto do automato (separados por espaço, sem epsilon): ").strip().split()
+    # verificacao se o estado fornecido como inicial esta presente nos estados do automato
+    while True:
+        estado_inicial = input("Digite o estado inicial do automato: ").strip()
+        if(estado_inicial not in estados):
+            print(f"---------------------")
+            print(f"Erro: O estado '{estado_inicial}' nao pertence aos estados do automato")
+            print(f"Selecione um estado inicial '{estados}': ")
+            print(f"---------------------")    
+            continue
+        break
+
+    # todo: implementar uma logica que obrigue a ter estados finais
+    while True:
+        estados_aceitacao = input("Digite os estados de aceitacao do automato (separados por espaço): ").strip().split()
+        estados_invalidos = []
+        for estado in estados_aceitacao:
+            if estado not in estados:
+                estados_invalidos.append(estado)
+        if estados_invalidos:
+            print(f"---------------------")
+            print(f"Erro: O(s) estado(s) {estados_invalidos} nao pertence(m) aos estados do automato \\n")
+            print(f"Selecione um ou mais estados de aceitacao '{estados}': ")
+            print(f"---------------------")    
+            continue
+        break      
     
-    # 2. COLETAR Alfabeto (Σ)
-    alfabeto = input("Alfabeto (separados por espaço, sem épsilon): ").strip().split()
-    
-    # 3. COLETAR Estado Inicial (q0)
-    estado_inicial = input("Estado Inicial: ").strip()
-    
-    # 4. COLETAR Estados Finais (F)
-    estados_aceitacao = input("Estados Finais (separados por espaço): ").strip().split()
-    
-    # 5. COLETAR Função de Transição (δ)
+    # coletando as transicoes do automato
     func_transicao = {}
-    # Incluímos o EPSILON no conjunto de símbolos válidos para a coleta
+    # aqui adicionamos o a transicao epsilon no alfabeto
     simbolos_validos = set(alfabeto) | {EPSILON}
-    print(f"\nDefina as transições, usando um símbolo válido ou '{EPSILON}' (digite 'fim' para parar):")
+    print(f"\nDefina as transicoes, usando um simbolo válido ou '{EPSILON}' (digite 'fim' para parar):")
+    print(f"Formato esperado -> ESTADO, SIMBOLO = DESTINO1 DESTINO2 ...")
     
     while True:
-        # Formato esperado: q0, a = q1 q2
+        # formato esperado: q0, a = q1 q2
         entrada = input("  δ(estado, simbolo) = ").strip()
         if entrada.lower() == 'fim':
             break
             
         try:
-            # 1. Tenta dividir a entrada no símbolo de igual (=)
-            parte_chave, parte_valor = entrada.split('=')
+            """
+            divide as partes leitura e resultado_leitura por um "="
+            - leitura => conjunto de estado e leitura de simbolo (q0, a)
+            - resultado_leitura => o que acontece com a leitura de um simbolo em um deterimado estado
+            """
+            leitura, resultado_leitura = entrada.split('=')
             
-            # 2. Processa a chave (estado, simbolo)
-            # A chave está no formato "q0, a" ou "δ(q0, a)"
-            # A linha abaixo busca por vírgula para separar estado e símbolo
-            if ',' not in parte_chave:
+            # processamento da leitura (estado, simbolo)
+            # a condicional porcura a "," para separa o estado do simbolo na entrada fornecida
+            if ',' not in leitura:
                  raise ValueError("Formato da chave inválido. Use 'estado, simbolo = ...'")
 
-            estado_origem, simbolo = [s.strip() for s in parte_chave.split(',')]
+            estado_origem, simbolo = [s.strip() for s in leitura.split(',')]
             
-            # Remove "δ(" e ")" se o usuário digitou
+            # remove "δ(" e ")" se o usuario digitou
             estado_origem = estado_origem.replace("δ(", "").strip()
             simbolo = simbolo.replace(")", "").strip()
             
-            # 3. Processa os destinos (valor)
-            # Os destinos podem ser múltiplos e devem ser convertidos para um conjunto
-            estados_destino = set(s.strip() for s in parte_valor.strip().split())
+            # processamento dos destinos (valor)
+            # removendo os espacos em branco extra do inicio e fim da string resultado_leitura
+            resultado_limpo = resultado_leitura.strip()
+            # divindo a string em uma lista de estados, separando por espacos
+            lista_estados = resultado_limpo.split()
+            estados_destino = set()
+            # removendo espcaos extras e add no conjunto estados_destino
+            for estado in lista_estados:
+                estado_limpo = estado.strip()
+                estados_destino.add(estado_limpo)
             
-            # 4. Validação adicional: Verifica se o símbolo é válido
+            # verificacao se o simbolo digitado esta presente nao alfabeto
             if simbolo not in simbolos_validos:
-                 print(f"  AVISO: Símbolo '{simbolo}' não é '{EPSILON}' nem parte do alfabeto definido. Ignorado.")
-                 continue
+                print(f"---------------------")
+                print(f"AVISO: O simbolo '{simbolo}' nao e '{EPSILON}' e nao faz parte do alfabeto definido.")
+                print(f"Digite novamente a transicao desejada. ")
+                print(f"---------------------")
+                continue
 
-            # 5. Adiciona ao dicionário de transições
+            # adicionando as transicoes
             chave = (estado_origem, simbolo)
             
-            # No AFN, a transição pode ser definida uma vez, depois atualizada
+            # atualizando a transicao caso desejado
             if chave not in func_transicao:
                 func_transicao[chave] = set()
-            
             func_transicao[chave].update(estados_destino)
-            
-            print(f"  -> Adicionado: δ({estado_origem}, {simbolo}) = {estados_destino}")
+            print(f"  -> Transicao adicionada: δ({estado_origem}, {simbolo}) = {estados_destino}")
             
         except ValueError as e:
-            # Captura erros de formatação (e.g., falta o '=' ou a vírgula)
+            # corrigindo erros de formatacao
+            print(f"---------------------")
             print(f"  Erro de sintaxe/formato: {e}. O formato esperado é: ESTADO, SIMBOLO = DESTINO1 DESTINO2 ...")
+            print(f"Digite novamente a transicao desejada. ")
+            print(f"---------------------")
             
-    # 6. CRIAR e RETORNAR o objeto AFN
+    # cria e retorna o objeto AFN
     return AFN(estados, alfabeto, func_transicao, estado_inicial, estados_aceitacao)
 
 
 # --- Função Principal ---
 def main():
     try:
-        # 1. Obter o AFN do usuário
-        meu_afn = obter_definicao_afn_usuario()
+        afn = obter_definicao_afn_usuario()
+        afd_convertido = conversor_afn_para_afd(afn)
         
-        # 2. Chamar o conversor
-        meu_afd_convertido = conversor_afn_para_afd(meu_afn)
+        print("\n----------------------------")
+        print("\n    Conversão Concluída!    ")
+        print("\n----------------------------")
+        afd_convertido.imprimir() # metodo definido em afd.py
         
-        # 3. Imprimir o AFD resultante
-        print("\n--- Conversão Concluída! ---")
-        meu_afd_convertido.imprimir() # Chama o método que definimos no afd.py
-        
-        # 4. Loop para testar cadeias
-        print("\n--- Teste do AFD ---")
+        # funcao para testar as cadeias de entrada e validar a linguagem no automato convertido
+        print("\n----------------------------")
+        print("\n   Teste o AFD convertido   ")
+        print("\n----------------------------")
         while True:
             cadeia = input("Digite uma cadeia para testar no AFD (ou 'sair'): ").strip()
             if cadeia.lower() == 'sair':
                 break
                 
-            if meu_afd_convertido.processar_cadeia(cadeia):
+            if afd_convertido.processar_cadeia(cadeia):
                 print(f"Cadeia '{cadeia}' Resultado: ACEITA")
             else:
                 print(f"Cadeia '{cadeia}' Resultado: REJEITA")
                 
     except Exception as e:
         print(f"\nOcorreu um erro fatal na execução: {e}")
-        # Use traceback para ver onde o erro ocorreu na sua lógica de conversão
+        # tratamento de erro para detectar onde ocorreu na implementacao da logica
         import traceback
         traceback.print_exc()
 

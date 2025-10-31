@@ -16,7 +16,7 @@ class AFD:
         self.estado_inicial = estado_inicial
         self.estados_aceitacao = set(estados_aceitacao)
         
-        # Opcional: Adicionar chamada a _validar_automato() aqui
+        # todo: adicionar validacao se é afn
         
     def processar_cadeia(self, cadeia: str) -> bool:
         """
