@@ -148,8 +148,10 @@ def obter_definicao_afn_usuario():
 # --- Função Principal ---
 def main():
     try:
-        print("=== Conversor AFN para AFD ===")
-        print("Escolha uma opção:")
+        print("==============================")
+        print("   Conversor AFN para AFD ")
+        print("==============================")
+        print("Escolha uma opcao:")
         print("  1 - Digitar AFN (entrada via prompt)")
         print("  2 - Ler AFN de arquivo JFLAP (.jff)")
         escolha = input("Opção (1 ou 2): ").strip()
@@ -161,28 +163,28 @@ def main():
             # gera ou nao uma saida jflap
             salvar = input("Deseja salvar o AFD gerado em arquivo .jff? (s/n): ").strip().lower()
             if salvar == 's':
-                caminho_saida = input("Caminho do arquivo de saída (.jff): ").strip()
+                caminho_saida = input("Caminho do arquivo de saida (.jff): ").strip()
                 salvar_afd_jflap(afd_convertido, caminho_saida)
                 print(f"AFD salvo em: {caminho_saida}")
 
         elif escolha == '2':
             caminho_entrada = input("Caminho do arquivo .jff (AFN): ").strip()
-            caminho_saida = input("Caminho do arquivo de saída .jff (AFD): ").strip()
+            caminho_saida = input("Caminho do arquivo de saida .jff (AFD): ").strip()
 
             afn = carregar_afn_jflap(caminho_entrada)
             afd_convertido = conversor_afn_para_afd(afn)
             salvar_afd_jflap(afd_convertido, caminho_saida)
-            print(f"Conversão concluída. AFD salvo em: {caminho_saida}")
+            print(f"Conversao concluida. O AFD foi salvo no arquivo: {caminho_saida}")
 
         else:
-            print("Opção inválida. Encerrando.")
+            print("Opcao invalida.")
             return
 
         # exibe e permite testar o AFD convertido (mesma lógica já existente)
-        print("\n--- AFD Resultado ---")
+        print("\n--- AFD Equivalente ---")
         afd_convertido.imprimir()
 
-        print("\nTeste de cadeias no AFD (digite 'sair' para encerrar):")
+        print("\nTeste aqui as cadeias no AFD equivalente (digite 'sair' para encerrar):")
         while True:
             cadeia = input("Cadeia: ").strip()
             if cadeia.lower() == 'sair':

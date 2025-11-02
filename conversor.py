@@ -10,10 +10,8 @@ frozenset -> conjunto imutavel (hashable) de elementos de um tipo (chave de um d
 dict -> dicionario que mapeia chaves de um tipo para valores de outro tipo (estado, simbolo -> estado)
 tuple -> tupla com dois tipos especificos (representacao do estado, simbolo)
 """
-
-# Definimos tipos para maior clareza, especialmente para os "macro-estados" (conjuntos)
-MacroEstado = Set[str]
-MacroEstadoHashable = FrozenSet[str] # Usado como chave em dicionários/sets
+MacroEstado = Set[str] # permite adicionar e remover elementos (set)
+MacroEstadoHashable = FrozenSet[str] # nao permite alteracao (frozenset)
 
 def conversor_afn_para_afd(afn: AFN) -> AFD:
     """
@@ -24,7 +22,6 @@ def conversor_afn_para_afd(afn: AFN) -> AFD:
         afd: o objeto AFD equivalente
     """
     print("\n--- Iniciando a construcao de Subconjuntos (AFN -> AFD) ---")
-    # --- 1. Inicialização ---
     
     # o alfabeto do AFD e o alfabeto do AFN (sem o epsilon)
     afd_alfabeto = afn.alfabeto
@@ -33,57 +30,52 @@ def conversor_afn_para_afd(afn: AFN) -> AFD:
     # fila para os macro-estados a serem explorados (busca em largura - BFS)
     fila: list[MacroEstado] = [estado_inicial_afd]
     
-    # Conjunto de macro-estados já descobertos/processados (usamos frozenset como chave)
-    # Todos os estados do AFD serão frozensets no início
+    # conjunto de macro-estados ja descobertos/processados (usamos frozenset como chave)
+    # todos os estados do AFD serao frozensets no inicio
     estados_descobertos: Set[MacroEstadoHashable] = {frozenset(estado_inicial_afd)}
     
-    # Dicionário temporário para as transições, usando frozensets como estados
-    # Chave: (macro_estado_origem, simbolo) -> Valor: macro_estado_destino
+    # dicionario temporario para as transicoes, usando frozensets como estados
+    # chave: (macro_estado_origem, simbolo) -> valor: macro_estado_destino
     afd_transicoes_temp: Dict[Tuple[MacroEstadoHashable, str], MacroEstadoHashable] = {}
 
-    # --- 2. Loop Principal: Descoberta de Estados e Transições ---
+    # loop principal: descoberta de estados e transicoes
     
     while fila:
-        # Pega o próximo macro-estado (conjunto de estados do AFN) para processar
+        # pega o proximo macro-estado (conjunto de estados no AFN) e processa
         macro_estado_atual: MacroEstado = fila.pop(0)
         macro_estado_hash: MacroEstadoHashable = frozenset(macro_estado_atual)
         
-        # Para cada símbolo do alfabeto (sem o épsilon)
         for simbolo in afd_alfabeto:
-            # if simbolo == EPSILON: continue # O alfabeto do AFN deve ser passado sem o EPSILON
+            # if simbolo == EPSILON: continue 
+            # o alfabeto do AFN deve ser passado sem o EPSILON
             
-            # 2a. Cálculo da Transição Estendida (δ')
+            # calculo da transicao Estendida (δ')
             
-            # Passo A: Encontrar todos os destinos do AFN para o símbolo (Union of delta)
+            # 1- encontrar todos os destinos do AFN para o simbolo
             estados_destino_simbolo: Set[str] = set()
             for estado_individual in macro_estado_atual:
                 # O AFN retorna um conjunto de destinos para o par (estado, simbolo)
                 destinos = afn.func_transicao.get((estado_individual, simbolo), set())
                 estados_destino_simbolo.update(destinos)
                 
-            # Passo B: Aplicar o Fecho-Épsilon no resultado
+            # 2- aplicar o fecho-epsilon no resultado
             proximo_macro_estado: MacroEstado = afn.calcula_fecho_epsilon(estados_destino_simbolo)
             
             proximo_macro_estado_hash: MacroEstadoHashable = frozenset(proximo_macro_estado)
             
-            # 2b. Adicionar a Transição
+            # adciona a transicao
             afd_transicoes_temp[(macro_estado_hash, simbolo)] = proximo_macro_estado_hash
-            
-            # 2c. Gerenciar a Fila
+
             if proximo_macro_estado_hash not in estados_descobertos:
                 estados_descobertos.add(proximo_macro_estado_hash)
                 fila.append(proximo_macro_estado)
-
-    # --- 3. Finalização: Renomeação e Definição do AFD ---
     
-    # 3a. Mapeamento de Nomes: {frozenset} -> 'S0', 'S1', ...
-    # Ordenamos os estados descobertos para garantir nomes consistentes (ex: S0 sempre será o inicial)
+    # definicao AFD: {frozenset} -> 'S0', 'S1', ...
+    # apresentacao dos estados na forma ordenada
     estados_ordenados = sorted(list(estados_descobertos), key=lambda x: str(x))
     mapa_nomes = {fs: f"S{i}" for i, fs in enumerate(estados_ordenados)}
     
     print(f"Descobertos {len(estados_descobertos)} estados para o AFD.")
-
-    # 3b. Tradução das Estruturas para os Nomes Finais (strings)
     
     afd_estados_nomes = set(mapa_nomes.values())
     afd_estado_inicial_nome = mapa_nomes[frozenset(estado_inicial_afd)]
@@ -96,14 +88,14 @@ def conversor_afn_para_afd(afn: AFN) -> AFD:
         
     afd_estados_finais_nomes: Set[str] = set()
     for macro_estado_fs in estados_descobertos:
-        # Regra do estado final: O macro-estado é final se contiver pelo menos um estado final do AFN
-        # Precisamos converter o frozenset de volta para set para usar 'any' com o conjunto de aceitação do AFN
+        # regra do estado final: o macro-estado e final se contiver pelo menos um estado final do AFN
+        # convertendo o frozenset de volta para set para usar 'any' com o conjunto de aceitacao do AFN
         macro_estado_set = set(macro_estado_fs) 
         
         if any(estado_afn in afn.estados_aceitacao for estado_afn in macro_estado_set):
             afd_estados_finais_nomes.add(mapa_nomes[macro_estado_fs])
             
-    # 4. Criar e retornar o objeto AFD final
+    # cria e retona o objeto AFD
     return AFD(
         estados=afd_estados_nomes,
         alfabeto=afd_alfabeto,
