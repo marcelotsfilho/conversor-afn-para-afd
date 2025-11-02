@@ -38,11 +38,10 @@ Um estado do AFD é final se pelo menos um dos estados do AFN contidos nesse con
 
 ## Algorítmo:
 
-O algorítmo de convsersão de autômato AFN para AFD é dividido em 4 partes `main.py`, `afn.py`, `afd.py`, `conversor.py`.
+O algorítmo de convsersão de autômato AFN para AFD é dividido em 5 partes `main.py`, `afn.py`, `afd.py`, `conversor.py`, `io_jflap.py`.
 
-1. main.py:
-
-- O arquivo `main.py` conta com as funções principais, onde será coletado os dados do AFN(como a coleta dos estados, coleta de alfabeto, coleta do estado inicial, coleta dos estados de aceitação e a coleta da função de transição) e retornar um objeto AFN. 
+1. main.py: 
+- O arquivo `main.py` conta com as funções principais, onde será coletado os dados do AFN(como a coleta dos estados, coleta de alfabeto, coleta do estado inicial, coleta dos estados de aceitação e a coleta da função de transição) e retornar um objeto AFN. Também temos a possibilidade de leitura do AFN a ser convertido através de um arquivo de entrada no formato JFLAP(.jff)
 
 - Após a coleta dos dados do autômato AFN é chamada a função de `conversor_afn_para_afd(passando por parâmetro o AFN gerado pelo usuário)`
 
@@ -97,10 +96,79 @@ O processo segue os passos do código:
 
 ## Como executar:
 
+Como mensionado anteriormente, o algoritmo possibilita o usuário decidir como deseja informar o AFN a ser convertido para AFD.
+
+O usuário pode optar por informar as definições do AFN via prompt (manual) ou informar as definições do AFN via arquivo JFLAP (.jff).
+
+Note:
+`Caso deseja informar o AFN via arquivo JFLAP, certifique de adicionar o arquivo na pasta antes de exercutar os seguintes comandos`.
+
 No terminal, execute o seguinte comando:
 
 ```
 python3 main.py
 ```
 
-A seguir, siga as instruções de preenchimento do `AFN` e execute a validação do `AFD` quando solicitado.
+Informe o método de definição do AFN:
+
+```
+=== Conversor AFN para AFD ===
+Escolha uma opção:
+  1 - Digitar AFN (entrada via prompt)
+  2 - Ler AFN de arquivo JFLAP (.jff)
+Opção (1 ou 2): 
+```
+
+- Caso a opção seja 1:
+
+Digite as informações solicitas conforme as instruções. Lembre-se, `para transições epsilon utilize ' '`, `para definição das funções de transição, o formato esperado é: ESTADO, SIMBOLO = DESTINO1 DESTINO2 ...`. Quando chegar ao fim das funcṍes de de transições, basta digitar `'fim'`.
+
+- Exemplo:
+
+```
+=== Conversor AFN para AFD ===
+Escolha uma opção:
+  1 - Digitar AFN (entrada via prompt)
+  2 - Ler AFN de arquivo JFLAP (.jff)
+Opção (1 ou 2): 1
+--- Definição do AFN ---
+(Atencao, use '' para transicoes epsilon)
+Digite os estados do automato (separados por espaço): q0 q1 qf
+Digite o alfabeto do automato (separados por espaço, sem epsilon): 0 1
+Digite o estado inicial do automato: q0
+Digite os estados de aceitacao do automato (separados por espaço): qf
+
+Defina as transicoes, usando um simbolo valido ou '' (digite 'fim' para parar):
+Formato esperado -> ESTADO, SIMBOLO = DESTINO1 DESTINO2 ...
+  δ(estado, simbolo) = q0, 0 = q0 q1
+  -> Transicao adicionada: δ(q0, 0) = {'q0', 'q1'}
+  δ(estado, simbolo) = q0, 1 = q0
+  -> Transicao adicionada: δ(q0, 1) = {'q0'}
+  δ(estado, simbolo) = q1, 1 = qf
+  -> Transicao adicionada: δ(q1, 1) = {'qf'}
+  δ(estado, simbolo) = fim
+```
+- O próximo passo é informar se deseja gerar um arquivo JFLAP saída do AFD equivalente gerado e testar as palavras para ver se a cadeia é aceita ou não pelo AFD.
+
+---
+- Caso a opção seja 2:
+
+Apresente o caminho do arquivo JFLAP (.jff) do AFN a ser transformado.
+
+- Exemplo:
+
+```
+=== Conversor AFN para AFD ===
+Escolha uma opção:
+  1 - Digitar AFN (entrada via prompt)
+  2 - Ler AFN de arquivo JFLAP (.jff)
+Opção (1 ou 2): 2
+Caminho do arquivo .jff (AFN): entrada-teste.jff
+Caminho do arquivo de saída .jff (AFD): saida-teste
+
+--- Iniciando a construcao de Subconjuntos (AFN -> AFD) ---
+Descobertos 3 estados para o AFD.
+Conversão concluída. AFD salvo em: saida-teste
+```
+
+Por fim, basta realizar o teste das palavras para ver se serão aceitas ou rejeitadas no AFD gerado.

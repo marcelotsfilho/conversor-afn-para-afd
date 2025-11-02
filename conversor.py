@@ -3,6 +3,13 @@
 from afn import AFN, EPSILON
 from afd import AFD
 from typing import Set, Dict, Tuple, FrozenSet
+"""
+a importação da biblioteca typing auxilia na estruturacao dos dados, exemplo:
+set -> conjunto imutavel de elementos de um tipo (conjunto de string)
+frozenset -> conjunto imutavel (hashable) de elementos de um tipo (chave de um dicionario)
+dict -> dicionario que mapeia chaves de um tipo para valores de outro tipo (estado, simbolo -> estado)
+tuple -> tupla com dois tipos especificos (representacao do estado, simbolo)
+"""
 
 # Definimos tipos para maior clareza, especialmente para os "macro-estados" (conjuntos)
 MacroEstado = Set[str]
@@ -10,25 +17,20 @@ MacroEstadoHashable = FrozenSet[str] # Usado como chave em dicionários/sets
 
 def conversor_afn_para_afd(afn: AFN) -> AFD:
     """
-    Implementa o algoritmo de Construção de Subconjuntos para converter um AFN para um AFD.
-
-    Args:
-        afn (AFN): O objeto AFN de entrada (incluindo transições-épsilon).
-
-    Returns:
-        AFD: O objeto AFD equivalente.
+    algoritmo de construcao de subconjuntos para converter um AFN para um AFD
+    argumentos:
+        afn (AFN): objeto AFN de entrada (contendo epsilon ou nao)
+    retorno:
+        afd: o objeto AFD equivalente
     """
-    print("\n--- Iniciando a Construção de Subconjuntos (AFN -> AFD) ---")
-    
+    print("\n--- Iniciando a construcao de Subconjuntos (AFN -> AFD) ---")
     # --- 1. Inicialização ---
     
-    # O alfabeto do AFD é o alfabeto do AFN (sem o épsilon)
+    # o alfabeto do AFD e o alfabeto do AFN (sem o epsilon)
     afd_alfabeto = afn.alfabeto
-    
-    # 1a. Estado Inicial do AFD: Fecho-Epsilon do estado inicial do AFN
+    # 1a. estado inicial do AFD: fecho-epsilon do estado inicial do AFN
     estado_inicial_afd: MacroEstado = afn.calcula_fecho_epsilon({afn.estado_inicial})
-    
-    # Fila para os macro-estados a serem explorados (busca em largura - BFS)
+    # fila para os macro-estados a serem explorados (busca em largura - BFS)
     fila: list[MacroEstado] = [estado_inicial_afd]
     
     # Conjunto de macro-estados já descobertos/processados (usamos frozenset como chave)

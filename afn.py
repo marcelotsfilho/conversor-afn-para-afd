@@ -14,20 +14,20 @@ class AFN:
     """
     def calcula_fecho_epsilon(self, estados: set) -> set:
         """
-        Calcula o fecho-épsilon (epsilon-closure) para um conjunto de estados no AFN.
+        calcula o fecho-epsilon (epsilon-closure) para um conjunto de estados no AFN
 
-        O fecho-épsilon de um conjunto S é o conjunto de todos os estados alcançáveis
-        a partir de qualquer estado em S seguindo zero ou mais transições-épsilon (&).
+        o fecho-epsilon de um conjunto S e o conjunto de todos os estados alcancaveis
+        a partir de qualquer estado em S seguindo zero ou mais transicoes-epsilon (&).
 
-        Utiliza o algoritmo de busca em profundidade (DFS) com uma pilha
-        para percorrer todos os estados alcançáveis por transições vazias.
+        utiliza o algoritmo de busca em profundidade (DFS) com uma pilha
+        para percorrer todos os estados alcancaveis por transicoes vazias
 
-        Args:
-            estados (set): O conjunto inicial de estados do AFN.
+        argumentos:
+            estados (set): o conjunto inicial de estados do AFN.
 
-        Returns:
-            set: O conjunto completo de estados que inclui os estados originais
-                 mais todos os estados alcançáveis via transições-épsilon.
+        retorno:
+            set: o conjunto completo de estados que inclui os estados originais
+                 mais todos os estados alcancaveis via transicoes-epsilon.
         """
         fecho = set(estados)
         pilha = list(estados)
@@ -35,7 +35,7 @@ class AFN:
         while pilha:
             estado_atual = pilha.pop()
             
-            # Obtém os estados alcançáveis a partir do estado_atual via EPSILON (&)
+            # obtem os estados alcancaveis a partir do estado_atual via EPSILON (&)
             for proximo_estado in self.func_transicao.get((estado_atual, EPSILON), set()):
                 if proximo_estado not in fecho:
                     fecho.add(proximo_estado)

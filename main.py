@@ -1,11 +1,46 @@
 # em main.py
-
+import xml.etree.ElementTree as ET
 from afn import AFN, EPSILON
 from conversor import conversor_afn_para_afd
+from io_jflap import carregar_afn_jflap, salvar_afd_jflap
+
+def afn_jflap(caminho_arquivo: str) -> AFN:
+    tree = ET.parse(caminho_arquivo)
+    root = tree.getroot()
+
+    estados = set()
+    alfabeto = set()
+    func_transicao = {}
+    estado_inicial = None
+    estados_aceitacao = set()
+
+    for state in root.findall(".//state"):
+        nome = state.get("name")
+        estados.add(nome)
+        if state.find("initial") is not None:
+            estado_inicial = nome
+        if state.find("final") is not None:
+            estados_aceitacao.add(nome)
+
+    for trans in root.findall(".//transition"):
+        origem = root.findtext(".//state[@id='" + trans.findtext('from') + "']").get("name")
+        destino = root.findtext(".//state[@id='" + trans.findtext('to') + "']").get("name")
+        simbolo = trans.findtext("read") or "ε"
+
+        alfabeto.add(simbolo)
+        func_transicao.setdefault((origem, simbolo), set()).add(destino)
+
+    return AFN(
+        estados = estados,
+        alfabeto = alfabeto - {EPSILON},
+        func_transicao = func_transicao,
+        estado_inicial = estado_inicial,
+        estados_aceitacao = estados_aceitacao
+    )
 
 def obter_definicao_afn_usuario():
     """
-    Função para coletar os dados do AFN do usuário e retornar um objeto AFN.
+    funcao para coletar os dados do AFN do usuario e retornar um objeto AFN.
     """
     print("--- Definição do AFN ---")
     # aviso para informar ao usuario que como deve ser preenchido a transicao epsilon
@@ -25,7 +60,6 @@ def obter_definicao_afn_usuario():
             continue
         break
 
-    # todo: implementar uma logica que obrigue a ter estados finais
     while True:
         estados_aceitacao = input("Digite os estados de aceitacao do automato (separados por espaço): ").strip().split()
         estados_invalidos = []
@@ -44,7 +78,7 @@ def obter_definicao_afn_usuario():
     func_transicao = {}
     # aqui adicionamos o a transicao epsilon no alfabeto
     simbolos_validos = set(alfabeto) | {EPSILON}
-    print(f"\nDefina as transicoes, usando um simbolo válido ou '{EPSILON}' (digite 'fim' para parar):")
+    print(f"\nDefina as transicoes, usando um simbolo valido ou '{EPSILON}' (digite 'fim' para parar):")
     print(f"Formato esperado -> ESTADO, SIMBOLO = DESTINO1 DESTINO2 ...")
     
     while True:
@@ -114,31 +148,51 @@ def obter_definicao_afn_usuario():
 # --- Função Principal ---
 def main():
     try:
-        afn = obter_definicao_afn_usuario()
-        afd_convertido = conversor_afn_para_afd(afn)
-        
-        print("\n----------------------------")
-        print("\n    Conversão Concluída!    ")
-        print("\n----------------------------")
-        afd_convertido.imprimir() # metodo definido em afd.py
-        
-        # funcao para testar as cadeias de entrada e validar a linguagem no automato convertido
-        print("\n----------------------------")
-        print("\n   Teste o AFD convertido   ")
-        print("\n----------------------------")
+        print("=== Conversor AFN para AFD ===")
+        print("Escolha uma opção:")
+        print("  1 - Digitar AFN (entrada via prompt)")
+        print("  2 - Ler AFN de arquivo JFLAP (.jff)")
+        escolha = input("Opção (1 ou 2): ").strip()
+
+        if escolha == '1':
+            afn = obter_definicao_afn_usuario()
+            afd_convertido = conversor_afn_para_afd(afn)
+
+            # gera ou nao uma saida jflap
+            salvar = input("Deseja salvar o AFD gerado em arquivo .jff? (s/n): ").strip().lower()
+            if salvar == 's':
+                caminho_saida = input("Caminho do arquivo de saída (.jff): ").strip()
+                salvar_afd_jflap(afd_convertido, caminho_saida)
+                print(f"AFD salvo em: {caminho_saida}")
+
+        elif escolha == '2':
+            caminho_entrada = input("Caminho do arquivo .jff (AFN): ").strip()
+            caminho_saida = input("Caminho do arquivo de saída .jff (AFD): ").strip()
+
+            afn = carregar_afn_jflap(caminho_entrada)
+            afd_convertido = conversor_afn_para_afd(afn)
+            salvar_afd_jflap(afd_convertido, caminho_saida)
+            print(f"Conversão concluída. AFD salvo em: {caminho_saida}")
+
+        else:
+            print("Opção inválida. Encerrando.")
+            return
+
+        # exibe e permite testar o AFD convertido (mesma lógica já existente)
+        print("\n--- AFD Resultado ---")
+        afd_convertido.imprimir()
+
+        print("\nTeste de cadeias no AFD (digite 'sair' para encerrar):")
         while True:
-            cadeia = input("Digite uma cadeia para testar no AFD (ou 'sair'): ").strip()
+            cadeia = input("Cadeia: ").strip()
             if cadeia.lower() == 'sair':
                 break
-                
-            if afd_convertido.processar_cadeia(cadeia):
-                print(f"Cadeia '{cadeia}' Resultado: ACEITA")
-            else:
-                print(f"Cadeia '{cadeia}' Resultado: REJEITA")
-                
+            resultado = afd_convertido.processar_cadeia(cadeia)
+            print("ACEITA" if resultado else "REJEITA")
+
+    # tratamento de erro (para identificar melhor)
     except Exception as e:
-        print(f"\nOcorreu um erro fatal na execução: {e}")
-        # tratamento de erro para detectar onde ocorreu na implementacao da logica
+        print(f"\nOcorreu um erro: {e}")
         import traceback
         traceback.print_exc()
 
