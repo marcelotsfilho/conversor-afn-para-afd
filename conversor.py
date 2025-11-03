@@ -1,5 +1,3 @@
-# em conversor.py
-
 from afn import AFN, EPSILON
 from afd import AFD
 from typing import Set, Dict, Tuple, FrozenSet
@@ -7,7 +5,7 @@ from typing import Set, Dict, Tuple, FrozenSet
 a importação da biblioteca typing auxilia na estruturacao dos dados, exemplo:
 set -> conjunto imutavel de elementos de um tipo (conjunto de string)
 frozenset -> conjunto imutavel (hashable) de elementos de um tipo (chave de um dicionario)
-dict -> dicionario que mapeia chaves de um tipo para valores de outro tipo (estado, simbolo -> estado)
+dict -> dicionario que mapeia chaves de um tipo para valores de outro tipo (estado, simbolo -> estados)
 tuple -> tupla com dois tipos especificos (representacao do estado, simbolo)
 """
 MacroEstado = Set[str] # permite adicionar e remover elementos (set)
@@ -21,16 +19,16 @@ def conversor_afn_para_afd(afn: AFN) -> AFD:
     retorno:
         afd: o objeto AFD equivalente
     """
-    print("\n--- Iniciando a construcao de Subconjuntos (AFN -> AFD) ---")
+    print("=============================================================")
+    print("   Iniciando a conversão do AFN para seu equivalente AFD    ")
+    print("=============================================================")
     
-    # o alfabeto do AFD e o alfabeto do AFN (sem o epsilon)
     afd_alfabeto = afn.alfabeto
-    # 1a. estado inicial do AFD: fecho-epsilon do estado inicial do AFN
     estado_inicial_afd: MacroEstado = afn.calcula_fecho_epsilon({afn.estado_inicial})
     # fila para os macro-estados a serem explorados (busca em largura - BFS)
     fila: list[MacroEstado] = [estado_inicial_afd]
     
-    # conjunto de macro-estados ja descobertos/processados (usamos frozenset como chave)
+    # conjunto de macro-estados ja descobertos/processados (usando frozenset como chave)
     # todos os estados do AFD serao frozensets no inicio
     estados_descobertos: Set[MacroEstadoHashable] = {frozenset(estado_inicial_afd)}
     
@@ -39,7 +37,6 @@ def conversor_afn_para_afd(afn: AFN) -> AFD:
     afd_transicoes_temp: Dict[Tuple[MacroEstadoHashable, str], MacroEstadoHashable] = {}
 
     # loop principal: descoberta de estados e transicoes
-    
     while fila:
         # pega o proximo macro-estado (conjunto de estados no AFN) e processa
         macro_estado_atual: MacroEstado = fila.pop(0)
@@ -48,9 +45,6 @@ def conversor_afn_para_afd(afn: AFN) -> AFD:
         for simbolo in afd_alfabeto:
             # if simbolo == EPSILON: continue 
             # o alfabeto do AFN deve ser passado sem o EPSILON
-            
-            # calculo da transicao Estendida (δ')
-            
             # 1- encontrar todos os destinos do AFN para o simbolo
             estados_destino_simbolo: Set[str] = set()
             for estado_individual in macro_estado_atual:
@@ -75,7 +69,7 @@ def conversor_afn_para_afd(afn: AFN) -> AFD:
     estados_ordenados = sorted(list(estados_descobertos), key=lambda x: str(x))
     mapa_nomes = {fs: f"S{i}" for i, fs in enumerate(estados_ordenados)}
     
-    print(f"Descobertos {len(estados_descobertos)} estados para o AFD.")
+    print(f"O AFD equivalente gerado contem {len(estados_descobertos)} estados.")
     
     afd_estados_nomes = set(mapa_nomes.values())
     afd_estado_inicial_nome = mapa_nomes[frozenset(estado_inicial_afd)]
